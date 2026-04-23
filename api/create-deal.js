@@ -90,6 +90,7 @@ Peso: ${d.peso || ""}
           dealname: `Solicitud - ${body.razon_social_a_facturar_solicitud_intercompanias}`,
           pipeline: "13819751",
           dealstage: "13819752",
+          hubspot_owner_id: "334240138",
           description: description
         }
       })
