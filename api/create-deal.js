@@ -104,7 +104,7 @@ Peso: ${d.peso || ""}
     // 📦 PROPERTIES (TODAS)
     // =========================
     const properties = {
-      dealname: `Solicitud - ${body.razon_social_a_facturar_solicitud_intercompanias || "Sin nombre"}`,
+      dealname: `${body.referencia_negocio || "SIN-REF"} / ${body.razon_social_a_facturar_solicitud_intercompanias || "SIN-RAZON"}`,
       pipeline: "13819751",
       dealstage: "13819752",
       hubspot_owner_id: "334240138",
