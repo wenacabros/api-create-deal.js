@@ -30,7 +30,6 @@ export default async function handler(req, res) {
 === DATOS GENERALES ===
 Email: ${body.email || ""}
 Referencia: ${body.referencia_negocio || ""}
-Nombre del solicitante: ${body.firstname || ""}
 Razón social: ${body.razon_social_a_facturar_solicitud_intercompanias || ""}
 
 === ORIGEN ===
