@@ -24,15 +24,14 @@ export default async function handler(req, res) {
     const toNumber = (v) => v ? Number(v) : null;
 
     // =========================
-    // 🧠 DESCRIPTION
+    // DEAL DESCRIPTION
     // =========================
     let description = `
 === DATOS GENERALES ===
 Email: ${body.email || ""}
 Referencia: ${body.referencia_negocio || ""}
-Nombre: ${body.firstname || ""}
+Nombre del solicitante: ${body.firstname || ""}
 Razón social: ${body.razon_social_a_facturar_solicitud_intercompanias || ""}
-Comentarios: ${body.comentarios_solicitud_intercompanias || ""}
 
 === ORIGEN ===
 Dirección: ${body.origen_direccion_completa_solicitud_intercompanias || ""}
@@ -102,8 +101,14 @@ Artículo ${n}
       peso: body.mercancia_peso_total_en_kg_5_solicitud_intercompanias
     });
 
+    description += `
+
+    === COMENTARIOS ADICIONALES ===
+    ${body.comentarios_solicitud_intercompanias || ""}
+    `;
+
     // =========================
-    // 🔎 CONTACTO (NO CREAR)
+    // CONTACTO
     // =========================
     let contactId = body.contactId || null;
 
@@ -136,7 +141,7 @@ Artículo ${n}
     console.log("CONTACT ID FINAL:", contactId);
 
     // =========================
-    // 📦 PROPERTIES
+    // PROPERTIES
     // =========================
     const properties = {
       dealname: `${body.referencia_negocio || "Sin ref"} / ${body.razon_social_a_facturar_solicitud_intercompanias || "Sin nombre"}`,
@@ -187,7 +192,7 @@ Artículo ${n}
     const dealId = dealData.id;
 
     // =========================
-    // 🔗 ASSOCIATION (FIX REAL)
+    // ASSOCIATION CONTACT <==> DEAL
     // =========================
     let associated = false;
 
