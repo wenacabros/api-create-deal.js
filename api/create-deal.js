@@ -19,10 +19,12 @@ export default async function handler(req, res) {
       ? JSON.parse(req.body)
       : req.body;
 
+    console.log("BODY:", body);
+
     const toNumber = (v) => v ? Number(v) : null;
 
     // =========================
-    // 🧠 DESCRIPTION COMPLETO
+    // 🧠 DESCRIPTION
     // =========================
     let description = `
 === DATOS GENERALES ===
@@ -51,14 +53,15 @@ RFC: ${body.destino_rfc_solicitud_intercompanias || ""}
       if (!Object.values(d).some(v => v)) return;
       description += `
 Artículo ${n}
-Clave: ${d.clave || ""}
-Desc: ${d.desc || ""}
-Cant: ${d.cant || ""}
-Unidad: ${d.unidad || ""}
-Peso en KG: ${d.peso || ""}
+- Clave: ${d.clave || ""}
+- Descripción: ${d.desc || ""}
+- Cantidad: ${d.cant || ""}
+- Unidad: ${d.unidad || ""}
+- Peso KG: ${d.peso || ""}
 `;
     };
 
+    // ARTICULOS
     addArticulo(1,{
       clave: body.mercancia_clave_sat_solicitud_intercompanias,
       desc: body.mercancia_descripcion_solicitud_intercompanias,
@@ -100,11 +103,12 @@ Peso en KG: ${d.peso || ""}
     });
 
     // =========================
-    // 🔎 BUSCAR CONTACTO
+    // 🔎 CONTACTO (PRIORIDAD: contactId)
     // =========================
-    let contactId = null;
+    let contactId = body.contactId || null;
 
-    if (body.email) {
+    // fallback por email
+    if (!contactId && body.email) {
       const contactRes = await fetch("https://api.hubapi.com/crm/v3/objects/contacts/search", {
         method: "POST",
         headers: {
@@ -123,13 +127,16 @@ Peso en KG: ${d.peso || ""}
       });
 
       const contactData = await contactRes.json();
+
       if (contactData.results?.length) {
         contactId = contactData.results[0].id;
       }
     }
 
+    console.log("CONTACT ID:", contactId);
+
     // =========================
-    // 📦 TODAS LAS PROPIEDADES
+    // 📦 PROPERTIES
     // =========================
     const properties = {
 
@@ -189,7 +196,7 @@ Peso en KG: ${d.peso || ""}
     };
 
     // =========================
-    // 🚀 CREAR DEAL
+    // 🚀 CREATE DEAL
     // =========================
     const dealRes = await fetch("https://api.hubapi.com/crm/v3/objects/deals", {
       method: "POST",
@@ -203,32 +210,45 @@ Peso en KG: ${d.peso || ""}
     const dealData = await dealRes.json();
 
     if (!dealRes.ok) {
-      console.error(dealData);
+      console.error("DEAL ERROR:", dealData);
       return res.status(dealRes.status).json(dealData);
     }
 
     const dealId = dealData.id;
 
     // =========================
-    // 🔗 ASOCIAR CONTACTO
+    // 🔗 ASSOCIATION
     // =========================
+    let associated = false;
+
     if (contactId) {
-      await fetch(`https://api.hubapi.com/crm/v4/objects/deals/${dealId}/associations/contacts/${contactId}/deal_to_contact`, {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${process.env.HS_TOKEN}`
+      const assocRes = await fetch(
+        `https://api.hubapi.com/crm/v3/objects/deals/${dealId}/associations/contacts/${contactId}/deal_to_contact`,
+        {
+          method: "PUT",
+          headers: {
+            "Authorization": `Bearer ${process.env.HS_TOKEN}`
+          }
         }
-      });
+      );
+
+      if (assocRes.ok) {
+        associated = true;
+      } else {
+        const err = await assocRes.text();
+        console.error("ASSOCIATION ERROR:", err);
+      }
     }
 
     return res.status(200).json({
       success: true,
       dealId,
-      contactLinked: !!contactId
+      contactId,
+      associated
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("SERVER ERROR:", err);
     return res.status(500).json({ error: "Server error" });
   }
 }
