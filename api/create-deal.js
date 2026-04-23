@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const toNumber = (v) => v ? Number(v) : null;
 
     // =========================
-    // 🧠 DESCRIPTION
+    // 🧠 DESCRIPTION COMPLETO
     // =========================
     let description = `
 === DATOS GENERALES ===
@@ -47,7 +47,7 @@ RFC: ${body.destino_rfc_solicitud_intercompanias || ""}
 === MERCANCÍA ===
 `;
 
-    const add = (n, d) => {
+    const addArticulo = (n, d) => {
       if (!Object.values(d).some(v => v)) return;
       description += `
 Artículo ${n}
@@ -55,12 +55,11 @@ Clave: ${d.clave || ""}
 Desc: ${d.desc || ""}
 Cant: ${d.cant || ""}
 Unidad: ${d.unidad || ""}
-Peso: ${d.peso || ""}
+Peso en KG: ${d.peso || ""}
 `;
     };
 
-    // artículos 1–5
-    add(1,{
+    addArticulo(1,{
       clave: body.mercancia_clave_sat_solicitud_intercompanias,
       desc: body.mercancia_descripcion_solicitud_intercompanias,
       cant: body.mercancia_cantidad_solicitud_intercompanias,
@@ -68,7 +67,7 @@ Peso: ${d.peso || ""}
       peso: body.mercancia_peso_total_en_kg_solicitud_intercompanias
     });
 
-    add(2,{
+    addArticulo(2,{
       clave: body.mercancia___clave_sat_2__solicitud_intercompanias_,
       desc: body.mercancia___descripcion_2__solicitud_intercompanias_,
       cant: body.mercancia___cantidad_2__solicitud_intercompanias_,
@@ -76,7 +75,7 @@ Peso: ${d.peso || ""}
       peso: body.mercancia___peso_total_en_kg_2__solicitud_intercompanias_
     });
 
-    add(3,{
+    addArticulo(3,{
       clave: body.mercancia_clave_sat_3_solicitud_intercompanias,
       desc: body.mercancia_descripcion_3_solicitud_intercompanias,
       cant: body.mercancia_cantidad_3_solicitud_intercompanias,
@@ -84,7 +83,7 @@ Peso: ${d.peso || ""}
       peso: body.mercancia_peso_total_en_kg_3_solicitud_intercompanias
     });
 
-    add(4,{
+    addArticulo(4,{
       clave: body.mercancia_clave_sat_4_solicitud_intercompanias,
       desc: body.mercancia_descripcion_4_solicitud_intercompanias,
       cant: body.mercancia_cantidad_4_solicitud_intercompanias,
@@ -92,7 +91,7 @@ Peso: ${d.peso || ""}
       peso: body.mercancia_peso_total_en_kg_4_solicitud_intercompanias
     });
 
-    add(5,{
+    addArticulo(5,{
       clave: body.mercancia_clave_sat_5_solicitud_intercompanias,
       desc: body.mercancia_descripcion_5_solicitud_intercompanias,
       cant: body.mercancia_cantidad_5_solicitud_intercompanias,
@@ -101,14 +100,44 @@ Peso: ${d.peso || ""}
     });
 
     // =========================
-    // 📦 PROPERTIES (TODAS)
+    // 🔎 BUSCAR CONTACTO
+    // =========================
+    let contactId = null;
+
+    if (body.email) {
+      const contactRes = await fetch("https://api.hubapi.com/crm/v3/objects/contacts/search", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.HS_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          filterGroups: [{
+            filters: [{
+              propertyName: "email",
+              operator: "EQ",
+              value: body.email
+            }]
+          }]
+        })
+      });
+
+      const contactData = await contactRes.json();
+      if (contactData.results?.length) {
+        contactId = contactData.results[0].id;
+      }
+    }
+
+    // =========================
+    // 📦 TODAS LAS PROPIEDADES
     // =========================
     const properties = {
-      dealname: `${body.referencia_negocio || "SIN-REF"} / ${body.razon_social_a_facturar_solicitud_intercompanias || "SIN-RAZON"}`,
+
+      dealname: `${body.referencia_negocio || "Sin ref"} / ${body.razon_social_a_facturar_solicitud_intercompanias || "Sin nombre"}`,
       pipeline: "13819751",
       dealstage: "13819752",
       hubspot_owner_id: "334240138",
-      description: description,
+      description,
 
       // GENERALES
       razon_social_a_facturar_solicitud_intercompanias: body.razon_social_a_facturar_solicitud_intercompanias,
@@ -133,28 +162,25 @@ Peso: ${d.peso || ""}
       mercancia_unidad_de_medida_solicitud_intercompanias: body.mercancia_unidad_de_medida_solicitud_intercompanias,
       mercancia_peso_total_en_kg_solicitud_intercompanias: toNumber(body.mercancia_peso_total_en_kg_solicitud_intercompanias),
 
-      // ARTICULO 2
+      // ARTICULOS 2–5
       mercancia___clave_sat_2__solicitud_intercompanias_: body.mercancia___clave_sat_2__solicitud_intercompanias_,
       mercancia___descripcion_2__solicitud_intercompanias_: body.mercancia___descripcion_2__solicitud_intercompanias_,
       mercancia___cantidad_2__solicitud_intercompanias_: toNumber(body.mercancia___cantidad_2__solicitud_intercompanias_),
       mercancia___unidad_de_medida_2__solicitud_intercompanias_: body.mercancia___unidad_de_medida_2__solicitud_intercompanias_,
       mercancia___peso_total_en_kg_2__solicitud_intercompanias_: toNumber(body.mercancia___peso_total_en_kg_2__solicitud_intercompanias_),
 
-      // ARTICULO 3
       mercancia_clave_sat_3_solicitud_intercompanias: body.mercancia_clave_sat_3_solicitud_intercompanias,
       mercancia_descripcion_3_solicitud_intercompanias: body.mercancia_descripcion_3_solicitud_intercompanias,
       mercancia_cantidad_3_solicitud_intercompanias: toNumber(body.mercancia_cantidad_3_solicitud_intercompanias),
       mercancia_unidad_de_medida_3_solicitud_intercompanias: body.mercancia_unidad_de_medida_3_solicitud_intercompanias,
       mercancia_peso_total_en_kg_3_solicitud_intercompanias: toNumber(body.mercancia_peso_total_en_kg_3_solicitud_intercompanias),
 
-      // ARTICULO 4
       mercancia_clave_sat_4_solicitud_intercompanias: body.mercancia_clave_sat_4_solicitud_intercompanias,
       mercancia_descripcion_4_solicitud_intercompanias: body.mercancia_descripcion_4_solicitud_intercompanias,
       mercancia_cantidad_4_solicitud_intercompanias: toNumber(body.mercancia_cantidad_4_solicitud_intercompanias),
       mercancia_unidad_de_medida_4_solicitud_intercompanias: body.mercancia_unidad_de_medida_4_solicitud_intercompanias,
       mercancia_peso_total_en_kg_4_solicitud_intercompanias: toNumber(body.mercancia_peso_total_en_kg_4_solicitud_intercompanias),
 
-      // ARTICULO 5
       mercancia_clave_sat_5_solicitud_intercompanias: body.mercancia_clave_sat_5_solicitud_intercompanias,
       mercancia_descripcion_5_solicitud_intercompanias: body.mercancia_descripcion_5_solicitud_intercompanias,
       mercancia_cantidad_5_solicitud_intercompanias: toNumber(body.mercancia_cantidad_5_solicitud_intercompanias),
@@ -163,9 +189,9 @@ Peso: ${d.peso || ""}
     };
 
     // =========================
-    // 🚀 HUBSPOT REQUEST
+    // 🚀 CREAR DEAL
     // =========================
-    const response = await fetch("https://api.hubapi.com/crm/v3/objects/deals", {
+    const dealRes = await fetch("https://api.hubapi.com/crm/v3/objects/deals", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.HS_TOKEN}`,
@@ -174,14 +200,32 @@ Peso: ${d.peso || ""}
       body: JSON.stringify({ properties })
     });
 
-    const data = await response.json();
+    const dealData = await dealRes.json();
 
-    if (!response.ok) {
-      console.error(data);
-      return res.status(response.status).json(data);
+    if (!dealRes.ok) {
+      console.error(dealData);
+      return res.status(dealRes.status).json(dealData);
     }
 
-    return res.status(200).json(data);
+    const dealId = dealData.id;
+
+    // =========================
+    // 🔗 ASOCIAR CONTACTO
+    // =========================
+    if (contactId) {
+      await fetch(`https://api.hubapi.com/crm/v4/objects/deals/${dealId}/associations/contacts/${contactId}/deal_to_contact`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${process.env.HS_TOKEN}`
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      dealId,
+      contactLinked: !!contactId
+    });
 
   } catch (err) {
     console.error(err);
