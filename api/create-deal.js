@@ -146,7 +146,7 @@ Artículo ${n}
       dealname: `${body.referencia_negocio || "Sin ref"} / ${body.razon_social_a_facturar_solicitud_intercompanias || "Sin nombre"}`,
       pipeline: "13819751",
       dealstage: "13819752",
-      hubspot_owner_id: "334240138",
+      hubspot_owner_id: "362536486",
       description,
 
       razon_social_a_facturar_solicitud_intercompanias: body.razon_social_a_facturar_solicitud_intercompanias,
